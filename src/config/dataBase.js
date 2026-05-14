@@ -6,12 +6,5 @@ const connectDb = async () => {
   );
 };
 
-connectDb()
-  .then(() => {
-    console.log("connection established successfully");
-  })
-  .catch((err) => {
-    console.log("error db not connected yet ");
-  });
-
+module.exports = connectDb;
 
