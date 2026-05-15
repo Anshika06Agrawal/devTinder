@@ -18,6 +18,27 @@ app.post("/signUp", async (req, res) => {
   }
 });
 
+// yeh batygi ki duplicate emailid ki email h ya nhi hai to konsi (1st one0) print hogi
+app.get("/user", async (req, res) => {
+  const userEmail = req.body.emailId;
+  try {
+    const users = await User.findOne({ emailId: userEmail });
+    res.send(users);
+  } catch (err) {
+    res.status(404).send("email id incorrect:" + err.message);
+  }
+});
+
+//yeh feed m kon kon h sabka data degi
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (err) {
+    res.status(404).send("feed not showing " + err.message);
+  }
+});
+
 connectDb()
   .then(() => {
     console.log("connection established successfully");
