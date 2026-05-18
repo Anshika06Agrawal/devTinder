@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const connectDb = require("./config/dataBase");
 const User = require("./models/user");
-app.use(express.json()); //POST request ka body read karta hai
+app.use(express.json());
 
 //async use kiya kyunki DB operation time leta hai
 app.post("/signUp", async (req, res) => {
@@ -36,6 +36,32 @@ app.get("/feed", async (req, res) => {
     res.send(users);
   } catch (err) {
     res.status(404).send("feed not showing " + err.message);
+  }
+});
+
+//create delete user api
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId;
+  try {
+    const users = await User.findByIdAndDelete(userId);
+    res.send("user deleted succesfully");
+  } catch (err) {
+    res.status(400).send("user not deleted yet" + err.message);
+  }
+});
+
+//update user api
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId;
+  const data = req.body;
+  try {
+    await User.findByIdAndUpdate({ _id: userId }, data, {
+      //jis user ki id ye hai usko find karo,data
+      returnDocument: "after",
+    });
+    res.send("user updated succesfully");
+  } catch (err) {
+    res.status(400).send("ssomething went wrong" + err.message);
   }
 });
 
