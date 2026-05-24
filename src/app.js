@@ -50,18 +50,36 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-//update user api
+//update user api with uid (patch api partial update ke liye use hoti hai.)
 app.patch("/user", async (req, res) => {
   const userId = req.body.userId;
   const data = req.body;
   try {
-    await User.findByIdAndUpdate({ _id: userId }, data, {
+    const ALLOWED_UPDATES = [
+      "userId",
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+    ];
+    const isUpdateAllowed = Object
+      .keys(data)
+      .every((k) => ALLOWED_UPDATES.includes(k));
+    if (!isUpdateAllowed) {
+      res.status(400).send("Update not allowed");
+    }
+    if(data?.skills.length>10){
+      throw new Error("   skills must be less than 10")
+    }
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       //jis user ki id ye hai usko find karo,data
       returnDocument: "after",
+      runValidators: "true",
     });
     res.send("user updated succesfully");
   } catch (err) {
-    res.status(400).send("ssomething went wrong" + err.message);
+    res.status(400).send("UPDATE FAILED" + err.message);
   }
 });
 
