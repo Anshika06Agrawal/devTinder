@@ -2,19 +2,50 @@ const express = require("express");
 const app = express();
 const connectDb = require("./config/dataBase");
 const User = require("./models/user");
+const bcrypt = require("bcrypt");
+const { valiDateSingUpData } = require("./utils/validation");
+
 app.use(express.json());
 
 //async use kiya kyunki DB operation time leta hai
 app.post("/signUp", async (req, res) => {
-  //creating a new instance of User model
-  //User=({}) means User ko ek object pass kar rahe ho. object wrapped inside parentheses
-  const user = new User(req.body); //ab pura data middleware se aarha
-  //ek naya user document create ho raha hai
   try {
+    //validate the Data
+    valiDateSingUpData(req); //utils k andar validation file hai usme h yeh function
+
+    // Encrpt the password validate password using bcrypt hash k form m password rakhte h database m
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // creating instance of new user
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.send("User added sucessfully");
   } catch (err) {
-    res.status(400).send("error saving the user:" + err.message);
+    res.status(400).send("ERROR :  " + err.message);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Email INVALID");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Password INCORRECT");
+    } else {
+      res.send("LOGGED IN SUCCESFULLY");
+    }
+  } catch (err) {
+    res.status(400).send("ERROR :  " + err.message);
   }
 });
 
@@ -63,14 +94,14 @@ app.patch("/user", async (req, res) => {
       "age",
       "skills",
     ];
-    const isUpdateAllowed = Object
-      .keys(data)
-      .every((k) => ALLOWED_UPDATES.includes(k));
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k),
+    );
     if (!isUpdateAllowed) {
-      res.status(400).send("Update not allowed");
+      res.status(400).send("Updates not allowed");
     }
-    if(data?.skills.length>10){
-      throw new Error("   skills must be less than 10")
+    if (data?.skills.length > 10) {
+      throw new Error("   skills must be less than 10");
     }
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       //jis user ki id ye hai usko find karo,data
@@ -85,9 +116,9 @@ app.patch("/user", async (req, res) => {
 
 connectDb()
   .then(() => {
-    console.log("connection established successfully");
+    console.log("Connection Established Successfully");
     app.listen(3000, () => {
-      console.log("server is sucessfully listen on port 3000");
+      console.log("Server Is Sucessfully Listen On Port 3000");
     });
   })
   .catch((err) => {
