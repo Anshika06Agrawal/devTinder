@@ -1,4 +1,4 @@
-const express =require ("express");
+const express = require("express");
 const authRouter = express.Router();
 const jwt = require("jsonwebtoken");
 const { validateSingUpData } = require("../utils/validation");
@@ -43,7 +43,9 @@ authRouter.post("/login", async (req, res) => {
       const token = await user.getJWT();
 
       //add the token to cookie & send the espone back to user
-      res.cookie("token", token);
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
       res.send("LOGGED IN SUCCESFULLY");
     } else {
       throw new Error("Password INCORRECT");
@@ -53,5 +55,16 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
-module.exports=authRouter
+authRouter.post("/logout", async (req, res) => {
+  //just expire token from cookie
+  try {
+    res.cookie("token", null, { expires: new Date(Date.now()) });
+    res.send("LOGGED OUT SCUCESSFULLY")
+  } catch (err) {
+    res.status(400).send("ERROR :  " + err.message);
+  }
+});
 
+
+
+module.exports = authRouter;
