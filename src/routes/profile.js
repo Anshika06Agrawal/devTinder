@@ -38,6 +38,7 @@ profileRouter.patch("/profile/editPassword", userAuth, async (req, res) => {
   try {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     const loggedInUser = req.user;
+    //token problem resolved
     const isPasswordValid = await bcrypt.compare(
       oldPassword,
       loggedInUser.password,
